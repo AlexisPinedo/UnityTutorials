@@ -23,9 +23,15 @@ public class RubyController : MonoBehaviour
 
     Animator animator;
     Vector2 lookDirection = new Vector2(1, 0);
+
     public GameObject projectilePrefab;
+    float timeUntilShot = 0.5f;
+    float shotDelay = 0.5f;
 
     public ParticleSystem damageParticle;
+
+    AudioSource audioSource;
+    public AudioClip throwSound;
 
     // Start is called before the first frame update
     void Start()
@@ -33,7 +39,10 @@ public class RubyController : MonoBehaviour
         rigidbody2d = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         currentHealth = maxHealth;
+
+        audioSource = GetComponent<AudioSource>();
     }
+
 
     // Update is called once per frame
     void Update()
@@ -60,15 +69,44 @@ public class RubyController : MonoBehaviour
 
         rigidbody2d.MovePosition(position);
 
-        if (Input.GetKeyDown(KeyCode.C))
+        // Check for damage received
+        if (isInvincible)
         {
+            invincibleTimer -= Time.deltaTime;
+            if (invincibleTimer < 0)
+            {
+                isInvincible = false;
+            }
+        }
+
+        timeUntilShot -= Time.deltaTime;
+
+        if (Input.GetKeyDown(KeyCode.C) && timeUntilShot < 0)
+        {
+            timeUntilShot = shotDelay;
             Launch();
+        }
+
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            RaycastHit2D hit = Physics2D.Raycast(rigidbody2d.position + Vector2.up * 0.2f, lookDirection, 1.5f, LayerMask.GetMask("NPC"));
+            if (hit.collider != null)
+            {
+                if (hit.collider != null)
+                {
+                    NonPlayerCharacter character = hit.collider.GetComponent<NonPlayerCharacter>();
+                    if (character != null)
+                    {
+                        character.DisplayDialog();
+                    }
+                }
+            }
         }
     }
 
     public void ChangeHealth(int amount)
     {
-        damageParticle.Play();
+        
         if (amount < 0)
         {
             if (isInvincible)
@@ -76,10 +114,13 @@ public class RubyController : MonoBehaviour
 
             isInvincible = true;
             invincibleTimer = timeInvincible;
+
+            animator.SetTrigger("Hit");
+            damageParticle.Play();
         }
 
         currentHealth = Mathf.Clamp(currentHealth + amount, 0, maxHealth);
-
+        Debug.Log(currentHealth);
         UIHealthBar.instance.SetValue(currentHealth / (float)maxHealth);
 
     }
@@ -87,10 +128,15 @@ public class RubyController : MonoBehaviour
     void Launch()
     {
         GameObject projectileObject = Instantiate(projectilePrefab, rigidbody2d.position + Vector2.up * 0.5f, Quaternion.identity);
-
         Projectile projectile = projectileObject.GetComponent<Projectile>();
-        projectile.Launch(lookDirection, 300);
 
+        projectile.Launch(lookDirection, 300);
         animator.SetTrigger("Launch");
+        PlaySound(throwSound);
+    }
+
+    public void PlaySound(AudioClip clip)
+    {
+        audioSource.PlayOneShot(clip);
     }
 }

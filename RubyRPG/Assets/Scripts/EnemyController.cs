@@ -19,6 +19,13 @@ public class EnemyController : MonoBehaviour
     public ParticleSystem smokeEffect;
     public ParticleSystem explosionEffect;
 
+    public AudioClip fixClip;
+    public AudioSource audioSource;
+    public AudioClip questClip;
+
+    private static int fixCount = 0;
+
+
 
     // Start is called before the first frame update
     void Start()
@@ -27,6 +34,7 @@ public class EnemyController : MonoBehaviour
         timer = changeTime;
 
         animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -80,6 +88,12 @@ public class EnemyController : MonoBehaviour
         smokeEffect.Stop();
         rigidbody2D.simulated = false;
         animator.SetTrigger("Fixed");
+        audioSource.Stop();
+        audioSource.PlayOneShot(fixClip);
+
+        fixCount++;
+        if(fixCount == 4)
+            audioSource.PlayOneShot(questClip);
 
     }
 }

@@ -5,8 +5,10 @@ using UnityEngine;
 public class HealthCollectible : MonoBehaviour
 {
     public ParticleSystem shineEffect;
-    
-    
+
+    public AudioClip collectedClip;
+
+
     void OnTriggerEnter2D(Collider2D other)
     {
         RubyController controller = other.GetComponent<RubyController>();
@@ -20,6 +22,7 @@ public class HealthCollectible : MonoBehaviour
                 shineEffect.Play();
                 controller.ChangeHealth(1);
                 Destroy(gameObject);
+                controller.PlaySound(collectedClip);
             }
         }
     }
